@@ -9,11 +9,11 @@ bool onStart(int argc, char** argv) {
 }
 
 //-----------------------------------------------------------------------------
-void onTap(int col, int row, int layer, long time_duration, long time_offset) {
+void onTap(Tap tap, long time_duration, long time_offset) {
 	using namespace std;
-	cout << "col=" << col << ", "
-	     << "row=" << row << ", " 
-	     << "layer=" << layer << ", "
+	cout << "col=" << tap.col << ", "
+	     << "row=" << tap.row << ", " 
+	     << "layer=" << tap.layer << ", "
 	     << "offset=" << time_offset << "ms, "
 	     << "duration=" << time_duration << "ms"
 	     << endl;

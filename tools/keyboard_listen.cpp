@@ -127,7 +127,7 @@ void processKey(int col, int row, int layer, int pressed) {
 			     << ", layer=" << key.layer
 			     << ", because out of time." << endl;
 		}
-		onTap(key.col, key.row, key.layer, key.duration, key.offset);
+		onTap({key.col, key.row, key.layer}, key.duration, key.offset);
 		keys.pop_front();
 	}
 }
