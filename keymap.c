@@ -9,6 +9,7 @@
 #define IS(kc) INVERT_SHIFT(kc)
 #define HAS_INVERTED_SHIFT(kc) (((kc) & 0xFF00) == QK_INVERT_SHIFT)
 #define HAS_MACRO(kc) ((((kc) & 0xF000) == QK_MACRO))
+#define MY_IS_KEY(kc) (IS_KEY(kc) || IS_KEY((kc) ^ QK_LCTL) || IS_KEY((kc) ^ QK_LSFT) || IS_KEY((kc) ^ QK_LALT) || HAS_INVERTED_SHIFT(kc))
 
 //-----------------------------------------------------------------------------
 #define _______ KC_TRNS 
@@ -398,7 +399,7 @@ bool process_oneshot_shift(uint16_t keycode, keyrecord_t *record) {
   static bool off_one_shot_regime = false;
   static bool unpress_one_shot_keycode = false;
 
-  if (record_presses && keycode != SHF_1 && keycode != SHF_3 && record->event.pressed) {
+  if (record_presses && keycode != SHF_1 && keycode != SHF_3 && record->event.pressed && MY_IS_KEY(keycode)) {
     is_pressed = true;
   }
 
@@ -413,7 +414,7 @@ bool process_oneshot_shift(uint16_t keycode, keyrecord_t *record) {
     unpress_one_shot_keycode = false;
   }
 
-  if (one_shot_regime && record->event.pressed) {
+  if (one_shot_regime && record->event.pressed && MY_IS_KEY(keycode)) {
     bool returned = false;
 
     currentLayer = 0 + layer_offset;
@@ -615,10 +616,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch(keycode) {
     case MY_LANG:
       if (record->event.pressed && !layerChange) {
-        register_code(KC_LSHIFT);
         register_code(KC_LALT);
-        unregister_code(KC_LALT);
+        register_code(KC_LSHIFT);
         unregister_code(KC_LSHIFT);
+        unregister_code(KC_LALT);
         if (currentLayer == 0) {
           currentLayer = 2;
           layer_on(2);
