@@ -4,8 +4,8 @@
 #include "keyboard_listen.h"
 
 //-----------------------------------------------------------------------------
-void onStart(int argc, char** argv) {
-
+bool onStart(int argc, char** argv) {
+	return true;
 }
 
 //-----------------------------------------------------------------------------

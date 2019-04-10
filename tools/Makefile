@@ -26,6 +26,9 @@ INCLUDES += keyboard_listen.h
 mini_typing_statistics: mini_typing_statistics.o keyboard_listen.o
 	$(CXX) $(SIZEFLAGS) $(CXXFLAGS) mini_typing_statistics.o keyboard_listen.o -o mini_typing_statistics
 
+heatmap_recorder: heatmap_recorder.o keyboard_listen.o
+	$(CXX) $(SIZEFLAGS) $(CXXFLAGS) heatmap_recorder.o keyboard_listen.o -o heatmap_recorder
+
 %.o: %.cpp $(INCLUDES)
 	$(CXX) $(SIZEFLAGS) $(CXXFLAGS) -c $< -o $@
 

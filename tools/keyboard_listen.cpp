@@ -15,6 +15,7 @@
 #include <cstdio>
 
 #ifdef __WINDOWS
+#include <windows.h>
 #include <csignal>
 #else
 #include <unistd.h>
@@ -46,16 +47,23 @@ long calcDuration(Time a, Time b) {
 //-----------------------------------------------------------------------------
 FILE* listener;
 bool isTerminate = false;
-void handle_sig(int) {
-	onExit();
-	#ifdef __WINDOWS
-	_pclose(listener);
-	#else 
-	pclose(listener);
-	#endif
+bool isExit = false;
+void handle_sig(void) {
+	if (!isExit) {
+		isExit = true;
+		onExit();
+		#ifdef __WINDOWS
+		_pclose(listener);
+		#else 
+		pclose(listener);
+		#endif
 	
-	isTerminate = true;
-	exit(0);
+		isTerminate = true;
+	}
+}
+
+void handle_sig_int(int) {
+	handle_sig();
 }
 
 };
@@ -124,6 +132,40 @@ void processKey(int col, int row, int layer, int pressed) {
 	}
 }
 
+#ifdef __WINDOWS
+//-----------------------------------------------------------------------------
+static BOOL WINAPI console_ctrl_handler(DWORD dwCtrlType)
+{
+	switch (dwCtrlType)
+	{
+		case CTRL_C_EVENT: // Ctrl+C
+			handle_sig();
+			return TRUE;
+			break;
+		case CTRL_BREAK_EVENT: // Ctrl+Break
+			handle_sig();
+			return TRUE;
+			break;
+		case CTRL_CLOSE_EVENT: // Closing the console window
+			handle_sig();
+			return TRUE;
+			break;
+		case CTRL_LOGOFF_EVENT: // User logs off. Passed only to services!
+			handle_sig();
+			return TRUE;
+			break;
+		case CTRL_SHUTDOWN_EVENT: // System is shutting down. Passed only to services!
+			handle_sig();
+			return TRUE;
+			break;
+	}
+
+	// Return TRUE if handled this message, further handler functions won't be called.
+	// Return FALSE to pass this message to further handlers until default handler calls ExitProcess().
+	return FALSE;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -131,14 +173,21 @@ void processKey(int col, int row, int layer, int pressed) {
 int main(int argc, char** argv) {
 	using namespace std;
 
-	onStart(argc, argv);
+	if (!onStart(argc, argv))
+		return 0;
 
-	signal(SIGINT, handle_sig);
-	#ifdef _WINDOWS
+	atexit(handle_sig);
+	at_quick_exit(handle_sig);
+	#ifdef __WINDOWS
+	SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
 	listener = _popen("hid_listen.exe", "r");
 	if (listener == NULL)
 		cout << "Error when running `hid_listen.exe`." << endl;
 	#else 
+	signal(SIGINT, handle_sig_int);  // ^C
+	signal(SIGABRT, handle_sig_int); // abort()
+	signal(SIGTERM, handle_sig_int); // sent by "kill" command
+	signal(SIGTSTP, handle_sig_int); // ^Z
 	listener = popen("sudo ./hid_listen", "r");
 	if (listener == NULL)
 		cout << "Error when running `sudo ./hid_listen.exe`." << endl;
