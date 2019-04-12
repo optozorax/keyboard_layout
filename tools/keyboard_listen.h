@@ -3,19 +3,9 @@
 #include <string>
 #include <iostream>
 
-struct Tap
-{
-	int col, row, layer;
-};
-
-inline std::ostream& operator<<(std::ostream& out, const Tap& tap) {
-	out << "(layer=" << tap.layer << ", row=" << tap.row << ", col=" << tap.col << ")";
-}
+#include "common.h"
 
 const long max_hold_time = 60'000; // Одну клавишу максимум можно зажимать минуту, иначе считается, что событие о её отпускании потеряно, и она отпускается принудительно
-
-/** Строка str имеет формат: "value=150, another=10, something=0", возвращает чему равно то или иное значение по его названию "value", "another", "something". */
-int parseStrValue(const std::string& str, const std::string& name);
 
 //-----------------------------------------------------------------------------
 /** Функции, которые пользователь должен переопределить. */
