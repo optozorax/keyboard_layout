@@ -255,45 +255,42 @@ private:
 	std::map<int, int32_t> statistics;
 };
 
-//=============================================================================
-//=============================================================================
-//=============================================================================
+class AllStatistics
+{
+public:
+	AllStatistics(const std::string& file) : onetap(1, 1, 1), twotap(1, 1, 1), daytap() {}
 
-OneTapHeatmap onetap(1, 1, 1);
-TwoTapHeatmap twotap(1, 1, 1);
-DayHeatmap    daytap;
-
-//-----------------------------------------------------------------------------
-void load_all(const std::string& file) {
-	using namespace std;
-
-	ifstream fin(file);
-	if (fin) {
-		onetap.load(fin);
-		twotap.load(fin);
-		daytap.load(fin);
-		fin.close();
+	void load(void) {
+		std::ifstream fin(file);
+		if (fin) {
+			onetap.load(fin);
+			twotap.load(fin);
+			daytap.load(fin);
+			fin.close();
+		}
 	}
-}
+	void save(void) const {
+		std::ofstream fout(file);
+		onetap.save(fout);
+		twotap.save(fout);
+		daytap.save(fout);
+		fout.close();
+	}
 
-//-----------------------------------------------------------------------------
-void save_all(const std::string& file) {
-	using namespace std;
+	OneTapHeatmap onetap;
+	TwoTapHeatmap twotap;
+	DayHeatmap    daytap;	
+};
 
-	ofstream fout(file);
-	onetap.save(fout);
-	twotap.save(fout);
-	daytap.save(fout);
-	fout.close();
-}
+//=============================================================================
+//=============================================================================
+//=============================================================================
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+AllStatistics all(save_file);
 
 //-----------------------------------------------------------------------------
 bool onStart(int argc, char** argv) {
-	load_all(save_file);
+	all.load();
 	return true;
 }
 
@@ -307,7 +304,7 @@ void onTap(Tap tap, long time_duration, long time_offset) {
 	daytap.onTap(tap);
 	if (counter > tap_count_to_save) {
 		counter = 0;
-		save_all(save_file);
+		all.save();
 	}
 }
 
@@ -317,6 +314,6 @@ void onExit(void) {
 
 	cerr << endl;
 	cerr << "Saving information..." << endl;
-	save_all(save_file);
+	all.save();
 	cerr << "Terminating..." << endl;
 }
