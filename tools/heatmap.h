@@ -16,6 +16,7 @@ template<typename T>
 class Vector3D
 {
 public:
+	Vector3D() : l(0, Rows(0, Cols(0, T()))) {}
 	Vector3D(int layersN, int rowsN, int colsN, const T& obj) : l(layersN, Rows(rowsN, Cols(colsN, obj))) {}
 
 	T& operator[](const Tap& tap) {
@@ -226,6 +227,10 @@ public:
 	int getFinger(Tap tap) const;
 	int getRow(Tap tap) const;
 
+	std::string getHandName(int finger);
+	std::string getFingerName(int finger);
+	std::string getRowName(int row);
+
 	void set(Tap tap, int finger, int row);
 private:
 	class LoadablePair : public std::pair<int, int>
@@ -235,7 +240,7 @@ private:
 		LoadablePair(const std::pair<int, int>& p) :  std::pair<int, int>(p) {}
 
 		void save(std::ostream& out) const {
-			out << this->first << " " << this->second << std::endl;
+			out << this->first << " " << this->second;
 		}
 		void load(std::istream& in) {
 			in >> this->first >> this->second;
@@ -262,7 +267,7 @@ private:
 		LoadableString(const std::string& str) : std::string(str) {}
 
 		void save(std::ostream& out) const {
-			out << *this << std::endl;
+			out << *this;
 		}
 		void load(std::istream& in) {
 			std::getline(in, *this);

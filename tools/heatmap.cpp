@@ -179,16 +179,65 @@ void Fingers::load(std::istream& in) {
 
 //-----------------------------------------------------------------------------
 int Fingers::getFinger(Tap tap) const {
+	tap.layer = 0;
 	return v[tap].first;
 }
 
 //-----------------------------------------------------------------------------
 int Fingers::getRow(Tap tap) const {
+	tap.layer = 0;
 	return v[tap].second;
 }
 
 //-----------------------------------------------------------------------------
+std::string Fingers::getHandName(int finger) {
+	if (finger < 5)
+		return "left";
+	else if (finger < 10)
+		return "right";
+	else
+		return "any";
+}
+
+//-----------------------------------------------------------------------------
+std::string Fingers::getFingerName(int finger) {
+	const std::vector<std::string> mas = {
+		"pinkie",
+		"ring",
+		"middle",
+		"index",
+		"thumb",
+
+		"thumb",
+		"index",
+		"middle",
+		"ring",
+		"pinkie",
+
+		"any",
+	};
+
+	return mas[finger];
+}
+
+//-----------------------------------------------------------------------------
+std::string Fingers::getRowName(int row) {
+	const std::vector<std::string> mas = {
+		"any",
+
+		"2-low",
+		"1-low",
+		"home",
+		"1-up",
+		"2-up", 
+	};
+
+	return mas[row];	
+}
+
+//-----------------------------------------------------------------------------
 void Fingers::set(Tap tap, int finger, int row) {
+	tap.layer = 0;
 	v[tap] =  std::pair<int, int>(finger, row);
 }
 
