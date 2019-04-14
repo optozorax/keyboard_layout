@@ -65,14 +65,22 @@ public:
 						out << l[i][j][k] << " ";
 					}
 				}
+				if constexpr (!has_save<T>::value) {
+					out << std::endl;
+				}
+			}
+			if constexpr (!has_save<T>::value) {
 				out << std::endl;
 			}
-			out << std::endl;
 		}
 	}
 	void load(std::istream& in) {
 		int layersN, rowsN, colsN;
-		in >> layersN >> rowsN >> colsN;
+		in >> layersN >> rowsN >> colsN; 
+		if constexpr (has_load<T>::value) {
+			std::string line;
+			std::getline(in, line);
+		}
 		l.clear();
 		l.resize(layersN, Rows(rowsN, Cols(colsN, T())));
 		for (int i = 0; i < layersN; ++i) {
@@ -89,7 +97,7 @@ public:
 	}
 private:
 	// Шаблонная магия, которая проверяет, есть ли у класса метод save. Ох уж эти шаблоны, их срочно надо сделать по-нормальному, чтобы такой херни не было. Большое спасибо https://stackoverflow.com/questions/257288/is-it-possible-to-write-a-template-to-check-for-a-functions-existence
-	template <typename T>
+	template <typename D>
 	class has_save
 	{
 	    typedef char one;
@@ -99,11 +107,11 @@ private:
 	    template <typename C> static two test(...);    
 
 	public:
-	    enum { value = sizeof(test<T>(0)) == sizeof(char) };
+	    enum { value = sizeof(test<D>(0)) == sizeof(char) };
 	};
 
 	// Аналогичная шаблонная магия, но только на метод load
-	template <typename T>
+	template <typename D>
 	class has_load
 	{
 	    typedef char one;
@@ -113,7 +121,7 @@ private:
 	    template <typename C> static two test(...);    
 
 	public:
-	    enum { value = sizeof(test<T>(0)) == sizeof(char) };
+	    enum { value = sizeof(test<D>(0)) == sizeof(char) };
 	};
 
 	typedef std::vector<T> Cols;
@@ -195,6 +203,14 @@ public:
 
 	void save(std::ostream& out) const;
 	void load(std::istream& in);
+
+	int getToday(void) const;
+
+	int getYear(int day) const;
+	int getMonth(int day) const;
+	int getDay(int day) const;
+
+	std::map<int, int32_t> getStatistics() const;
 private:
 	void updateToday();
 

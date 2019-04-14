@@ -233,7 +233,6 @@ void sum_rows(const po::variables_map& vm) {
 //-----------------------------------------------------------------------------
 void sum(const po::variables_map& vm) {
 	std::string regime, fingerfile;
-	bool useFingers = false;
 	if (vm.count("regime"))
 		regime = vm["regime"].as<std::string>();
 	if(vm.count("fingerfile")) {
@@ -253,7 +252,6 @@ void sum(const po::variables_map& vm) {
 			std::cout << "Fingers file is wrong! Exception: " << ex.what() << std::endl;
 			return;
 		}
-		useFingers = true;
 	} else if (regime == "fingers" || regime == "rows") {
 		std::cout << "You not enter file with fingers specification." << std::endl;
 	}
@@ -273,15 +271,164 @@ void sum(const po::variables_map& vm) {
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+void onetap(const po::variables_map& vm) {
+	struct onetap_elem
+	{
+		std::string name;
+		int taps;
+	};
+
+	bool isUseNames = false;
+	if (vm.count("namefile")) {
+		std::string name = vm["namefile"].as<std::string>(); 
+		std::ifstream fin(name);
+		try {
+			if (fin) {
+				names.load(fin);
+				fin.close();
+				isUseNames = true;
+			} else {
+				std::cout << "Names file didn't exists!" << std::endl;
+					return;
+			}
+		} catch (std::exception& ex) {
+			std::cout << "Names file is wrong! Exception: " << ex.what() << std::endl;
+			return;
+		}
+	}
+
+	bool isShowZeros = vm.count("show-zeros");
+	bool isSeparateByLayers = vm.count("separate-by-layers");
+	bool isShowPosWithName = vm.count("show-pos-with-name");
+	int substr = -1; if (vm.count("substr")) substr = vm["substr"].as<int>();
+	std::string sort = "frequent"; if (vm.count("sort")) sort = vm["sort"].as<std::string>();
+	auto make_for_layer = [&] (std::vector<onetap_elem>& elems, int layer) {
+		for (int j = 0; j < all.onetap.rowsCount(); ++j) {
+			for (int k = 0; k < all.onetap.colsCount(); ++k) {
+				Tap tap{k, j, layer};
+				int taps = all.onetap.getTapCount(tap);
+				if (!isShowZeros && taps != 0) {
+					std::string name;
+					if (isShowPosWithName || !isUseNames) 
+						name = std::to_string(tap.layer) + "," + std::to_string(tap.row) + "," + std::to_string(tap.col);
+					if (isShowPosWithName && isUseNames)
+						 name = name +  "," + names.getName(tap);
+					if (!isShowPosWithName && isUseNames)
+						name = names.getName(tap);
+					elems.push_back({name, taps});
+				}
+			}
+		}
+	};
+
+	auto sort_elems = [&] (std::vector<onetap_elem>& elems) {
+		if (sort == "frequent") {
+			std::sort(elems.begin(), elems.end(), [] (auto& a, auto& b) -> bool {
+				return a.taps > b.taps;
+			});
+		} else if (sort == "rare") {
+			std::sort(elems.begin(), elems.end(), [] (auto& a, auto& b) -> bool {
+				return a.taps < b.taps;
+			});
+		} else {
+			// Никакой сортировки!
+		}
+	};
+
+	auto print_elems = [&] (std::vector<onetap_elem>& elems, int allSum) {
+		if (substr == -1 || substr > elems.size()) substr = elems.size();
+		Table table;
+		for (int i = 0; i < substr; ++i) {
+			TableLine line;
+			line.push_back(elems[i].name);
+			line.push_back(" taps: ");
+			line.push_back(std::to_string(elems[i].taps));
+			line.push_back(", percent: ");
+			line.push_back(getPercent(elems[i].taps, allSum));
+			line.push_back("%");
+
+			table.emplace_back(line);
+		}
+		tablePrint(table);
+	};
+
+	if (isSeparateByLayers) {
+		for (int i = 0; i < all.onetap.layersCount(); ++i) {
+			std::cout << "Layer: " << i << std::endl;
+			std::vector<onetap_elem> elems;
+			make_for_layer(elems, i);
+			sort_elems(elems);
+			print_elems(elems, sumLayerTaps(i));
+			std::cout << std::endl;
+		}
+	} else {
+		std::vector<onetap_elem> elems;
+		for (int i = 0; i < all.onetap.layersCount(); ++i)
+			make_for_layer(elems, i);
+		sort_elems(elems);
+		print_elems(elems, sumAllTaps());
+	}
+
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+void daily(const po::variables_map& vm) {
+	int days = 31;
+	if (vm.count("period")) {
+		auto period = vm["period"].as<std::string>();
+		if (period == "today") days = 0;
+		if (period == "yestrday") days = 1;
+		if (period == "week") days = 7;
+		if (period == "month") days = 31;
+		if (period == "year") days = 366;
+		if (period == "all") days = -1;
+	}
+
+	auto print_date = [&] (int day) -> std::string {
+		std::stringstream sout;
+		sout << all.daytap.getDay(day) << "."
+		     << all.daytap.getMonth(day) << "."
+		     << all.daytap.getYear(day);
+		return sout.str();
+	};
+
+	int today = all.daytap.getToday();
+	Table table;
+	for (auto& i : all.daytap.getStatistics()) {
+		if (today-i.first <= days || days == -1) {
+			TableLine line;
+			line.push_back(print_date(i.first));
+			line.push_back(": ");
+			line.push_back(std::to_string(i.second));
+			line.push_back(" taps");
+			table.emplace_back(line);
+		}
+	}
+	tablePrint(table);
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+
 int main(int argc, char* argv[]) {
 	po::options_description desc("General options");
 	desc.add_options()
 		("help,h", "Show help")
 		("statfile,s", po::value<std::string>(), "File with statistics. For default it is `heatmap_file.txt`.")
-		("type,t", po::value<std::string>(), "Select statistics type: `sum`."
-			//", `onetap`, `twotap`, `daily`."
+		("type,t", po::value<std::string>(), "Select statistics type: `sum`, `onetap`, "
+			//", `twotap`, "
+			"`daily`."
 			"\n  \t`sum` - sum keys count in different ways."
-			//"\n  \t`onetap` - statistics of one tap.\n  \t`twotap` - count of two serial taps.\n  \t`daily` - statistics by each day."
+			"\n  \t`onetap` - statistics of one tap."
+			//"\n  \t`twotap` - count of two serial taps."
+			"\n  \t`daily` - statistics by each day."
 			);
 
 	po::options_description sum_desc("`sum` options");
@@ -290,10 +437,19 @@ int main(int argc, char* argv[]) {
 		("fingerfile,f", po::value<std::string>(), "File with fingers and rows specification")
 		("separate-by-layers,S", "Separate any statistics by layers.");
 
-	/*po::options_description onetap_desc("`onetap` options");
+	po::options_description onetap_desc("`onetap` options");
 	onetap_desc.add_options()
-		("regime,r", po::value<std::string>(), "Select sum regime: `all`, `fingers`, `rows`.\n  \t`all` - write count of all taps.\n  \t`fingers` - write count of taps by fingers.\n  \t`rows` - write count of taps by rows.")
-		("fingerfile,f", po::value<std::string>(), "File with fingers and rows specification");	*/
+		("show-zeros,z", "Show keys with zero taps.")
+		("separate-by-layers,S", "Separate any statistics by layers.")
+		("sort,r", po::value<std::string>(), "Can be: `frequent`, `no`, `rare`. Sorted statistics by taps count. If frequent is selected, then most frequent keys will be on the top.")
+		("namefile,f", po::value<std::string>(), "File with key names. If this file is specified, then position of key isn't displayed. To display it, use next option.")
+		("show-pos-with-name,p", "When file with keys names is specified, prints position in format: layer,row,col,\"Name\". Example: 0,1,1,\"A\".")
+		("substr,u", po::value<int>(), "Integer value N. Shows only N first results.");
+
+	po::options_description daily_desc("`daily` options");
+	daily_desc.add_options()
+		("period,p", po::value<std::string>(), "Can be: `today`, `yesterday`, `week`, `month`, `year`, `all`.")
+		("sort-by-taps,S", "For default sorted by day. With this option stats will be sorted by taps count.");
 
 	po::variables_map vm;
 	try {
@@ -312,11 +468,19 @@ int main(int argc, char* argv[]) {
 				desc.add(sum_desc);
 				po::store(po::parse_command_line(argc, argv, desc), vm);
 				sum(vm);
+			} else if (type == "onetap") {
+				desc.add(onetap_desc);
+				po::store(po::parse_command_line(argc, argv, desc), vm);
+				onetap(vm);
+			} else if (type == "daily") {
+				desc.add(daily_desc);
+				po::store(po::parse_command_line(argc, argv, desc), vm);
+				daily(vm);
 			} else {
 				std::cout << "Unknown type `" << type << "`." << std::endl;
 			}
 		} else if (vm.count("help")) {
-			desc.add(sum_desc);
+			desc.add(sum_desc).add(onetap_desc).add(daily_desc);
 			std::cout << desc << std::endl;
 		} else {
 			std::cout << "You don't specify regime! Try `--help` for more information." << std::endl; 

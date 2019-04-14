@@ -129,6 +129,63 @@ void DayHeatmap::load(std::istream& in) {
 }
 
 //-----------------------------------------------------------------------------
+int DayHeatmap::getToday(void) const {
+	using namespace std::chrono;
+	int today1;
+	auto now = system_clock::now();
+	today1 = duration_cast<hours>(now.time_since_epoch()).count();
+	today1 /= 24;
+	return today1;
+}
+
+//-----------------------------------------------------------------------------
+int DayHeatmap::getYear(int day) const {
+	using namespace std::chrono;
+	int today1 = getToday();
+	day = today1 - day;
+	auto now = system_clock::now();
+	now -= hours(24*day);
+
+	time_t tt = system_clock::to_time_t(now);
+	tm local_tm = *localtime(&tt);
+
+	return local_tm.tm_year + 1900;
+}
+
+//-----------------------------------------------------------------------------
+int DayHeatmap::getMonth(int day) const {
+	using namespace std::chrono;
+	int today1 = getToday();
+	day = today1 - day;
+	auto now = system_clock::now();
+	now -= hours(24*day);
+
+	time_t tt = system_clock::to_time_t(now);
+	tm local_tm = *localtime(&tt);
+
+	return local_tm.tm_mon + 1;
+}
+
+//-----------------------------------------------------------------------------
+int DayHeatmap::getDay(int day) const {
+	using namespace std::chrono;
+	int today1 = getToday();
+	day = today1 - day;
+	auto now = system_clock::now();
+	now -= hours(24*day);
+
+	time_t tt = system_clock::to_time_t(now);
+	tm local_tm = *localtime(&tt);
+
+	return local_tm.tm_mday;
+}
+
+//-----------------------------------------------------------------------------
+std::map<int, int32_t> DayHeatmap::getStatistics() const {
+	return statistics;
+}
+
+//-----------------------------------------------------------------------------
 void DayHeatmap::updateToday() {
 	using namespace std::chrono;
 	auto now = system_clock::now();

@@ -13,6 +13,8 @@
 #include <deque>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
+#include <stdlib.h>
 
 #ifdef __WINDOWS
 #include <windows.h>
@@ -51,14 +53,13 @@ bool isExit = false;
 void handle_sig(void) {
 	if (!isExit) {
 		isExit = true;
+		isTerminate = true;
 		onExit();
 		#ifdef __WINDOWS
 		_pclose(listener);
 		#else 
 		pclose(listener);
 		#endif
-	
-		isTerminate = true;
 	}
 }
 
@@ -177,7 +178,7 @@ int main(int argc, char** argv) {
 		return 0;
 
 	atexit(handle_sig);
-	at_quick_exit(handle_sig);
+	//at_quick_exit(handle_sig);
 	#ifdef __WINDOWS
 	SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
 	listener = _popen("hid_listen.exe", "r");
