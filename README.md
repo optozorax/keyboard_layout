@@ -319,24 +319,24 @@ make heatmap_displayer
 Для того, чтобы после автошифта его индикатор горел ровно необходимое число секунд, нужно добавить следующий код в qmk:
 
 В `tmk_core/common/keyboard.h`:
-```c++
+```diff
 // ...
-void user_timer(void);
++void user_timer(void);
 // ...
 ```
 
 В `tmk_core/common/keyboard.c`:
-```c++
+```diff
 // ...
 void keyboard_task(void)
 {
 	// ...
 
-    user_timer();
++    user_timer();
 }
 
-__attribute__((weak))
-void user_timer() {
-}
++__attribute__((weak))
++void user_timer() {
++}
 // ...
 ```
