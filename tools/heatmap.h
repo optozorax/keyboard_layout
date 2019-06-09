@@ -30,8 +30,9 @@ public:
 	}
 	const T& operator[](const Tap& tap) const {
 		if (tap.layer >= layersCount() || tap.row >= rowsCount() || tap.col >= colsCount()) {
-			std::cerr << "Error when trying access to tap: " << tap << std::endl;
-			throw std::exception();
+			/*std::cerr << "Error when trying access to tap: " << tap << std::endl;
+			throw std::exception();*/
+			return T();
 		}
 		
 		return l[tap.layer][tap.row][tap.col];	

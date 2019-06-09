@@ -52,6 +52,17 @@ int sumRowTapsLayer(int row, int layer);
 int sumRowTaps(int row);
 
 //-----------------------------------------------------------------------------
+int sumTapTaps(Tap tap) {
+	int32_t sum = 0;
+	for (int j = 0; j < all.twotap.rowsCount(); ++j) {
+		for (int k = 0; k < all.twotap.colsCount(); ++k) {
+			sum += all.twotap.getTapCount(tap, {k, j, 0});
+		}
+	}
+	return sum;	
+}
+
+//-----------------------------------------------------------------------------
 int sumLayerTaps(int layer) {
 	if (layer == -1)
 		return sumAllTaps();
@@ -373,6 +384,158 @@ void onetap(const po::variables_map& vm) {
 }
 
 //-----------------------------------------------------------------------------
+void twotap(const po::variables_map& vm) {
+	struct twotap_elem
+	{
+		std::string name;
+		Tap tap1, tap2;
+		int count;
+	};
+
+	bool isUseNames = false;
+	if (vm.count("namefile")) {
+		std::string name = vm["namefile"].as<std::string>(); 
+		std::ifstream fin(name);
+		try {
+			if (fin) {
+				names.load(fin);
+				fin.close();
+				isUseNames = true;
+			} else {
+				std::cout << "Names file didn't exists!" << std::endl;
+					return;
+			}
+		} catch (std::exception& ex) {
+			std::cout << "Names file is wrong! Exception: " << ex.what() << std::endl;
+			return;
+		}
+	}
+
+	bool isShowZeros = vm.count("show-zeros");
+	bool isSeparateByLayers = vm.count("separate-by-layers");
+	bool isSeparateByKeys = vm.count("separate-by-keys");
+	bool isShowPosWithName = vm.count("show-pos-with-name");
+	bool isPrintFirstName = !vm.count("two-names");
+	int substr = -1; if (vm.count("substr")) substr = vm["substr"].as<int>();
+	std::string sort = "frequent"; if (vm.count("sort")) sort = vm["sort"].as<std::string>();
+	auto get_tap_name = [&] (Tap tap) {
+		std::string name;
+		if (isShowPosWithName || !isUseNames) 
+			name = std::to_string(tap.layer) + "," + std::to_string(tap.row) + "," + std::to_string(tap.col);
+		if (isShowPosWithName && isUseNames)
+			name = name +  "," + names.getName(tap);
+		if (!isShowPosWithName && isUseNames)
+			name = names.getName(tap);
+		return name;
+	};
+	auto make_for_tap = [&] (std::vector<twotap_elem>& elems, Tap tap1, std::string tap1_name) {
+		for (int j2 = 0; j2 < all.twotap.rowsCount(); ++j2) {
+			for (int k2 = 0; k2 < all.twotap.colsCount(); ++k2) {
+				Tap tap2{j2, k2, 0};
+
+				int taps = all.twotap.getTapCount(tap1, tap2);
+				if (!isShowZeros && taps != 0) {
+					std::string tap2_name = get_tap_name({j2, k2, tap1.layer});
+
+					std::string twotap_name;
+					if (tap1_name.size() == 0) {
+						twotap_name = tap2_name;
+					} else if (tap1_name.size() == 1 && tap2_name.size() == 1) {
+						twotap_name = tap1_name + tap2_name;
+					} else {
+						twotap_name = tap1_name + " + " + tap2_name;
+					}
+
+					elems.push_back({twotap_name, tap1, tap2, taps});
+				}
+			}
+		}
+	};
+	auto make_for_layer = [&] (std::vector<twotap_elem>& elems, int layer) {
+		for (int j1 = 0; j1 < all.twotap.rowsCount(); ++j1) {
+			for (int k1 = 0; k1 < all.twotap.colsCount(); ++k1) {
+				Tap tap1{j1, k1, layer};
+				make_for_tap(elems, tap1, get_tap_name(tap1));
+			}
+		}
+	};
+
+	auto sort_elems = [&] (std::vector<twotap_elem>& elems) {
+		if (sort == "frequent") {
+			std::sort(elems.begin(), elems.end(), [] (auto& a, auto& b) -> bool {
+				return a.count > b.count;
+			});
+		} else if (sort == "rare") {
+			std::sort(elems.begin(), elems.end(), [] (auto& a, auto& b) -> bool {
+				return a.count < b.count;
+			});
+		} else {
+			// Никакой сортировки!
+		}
+	};
+
+	auto print_elems = [&] (std::vector<twotap_elem>& elems, int allSum) {
+		int loc_substr = substr;
+		if (loc_substr == -1 || loc_substr > elems.size()) loc_substr = elems.size();
+		Table table;
+		for (int i = 0; i < loc_substr; ++i) {
+			TableLine line;
+			line.push_back(elems[i].name);
+			line.push_back(" taps: ");
+			line.push_back(std::to_string(elems[i].count));
+			line.push_back(", percent: ");
+			line.push_back(getPercent(elems[i].count, allSum));
+			line.push_back("%");
+
+			table.emplace_back(line);
+		}
+		tablePrint(table);
+	};
+
+	if (isSeparateByKeys) {
+		for (int i = 0; i < all.onetap.layersCount(); ++i) {
+			std::cout << "Layer: " << i << std::endl;
+			for (int j1 = 0; j1 < all.twotap.rowsCount(); ++j1) {
+				for (int k1 = 0; k1 < all.twotap.colsCount(); ++k1) {
+					Tap tap{j1, k1, i};
+					std::vector<twotap_elem> elems;
+					if (isPrintFirstName)
+						make_for_tap(elems, tap, get_tap_name(tap));
+					else
+						make_for_tap(elems, tap, "");
+					sort_elems(elems);
+					if (isShowZeros && elems.size() == 0) {
+						std::cout << "Key: " << get_tap_name(tap) << ", zero occurences." << std::endl;
+					} else if (elems.size() != 0) {
+						std::cout << "Key: " << get_tap_name(tap) << std::endl;
+						print_elems(elems, sumTapTaps(tap));
+						std::cout << std::endl;
+					}
+				}
+			}
+			std::cout << std::endl;
+		}
+	} else if (isSeparateByLayers) {
+		for (int i = 0; i < all.onetap.layersCount(); ++i) {
+			std::cout << "Layer: " << i << std::endl;
+			std::vector<twotap_elem> elems;
+			make_for_layer(elems, i);
+			sort_elems(elems);
+			print_elems(elems, sumLayerTaps(i));
+			std::cout << std::endl;
+		}
+	} else {
+		std::vector<twotap_elem> elems;
+		for (int i = 0; i < all.onetap.layersCount(); ++i)
+			make_for_layer(elems, i);
+		sort_elems(elems);
+		print_elems(elems, sumAllTaps());
+	}
+
+}
+
+
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
@@ -422,12 +585,11 @@ int main(int argc, char* argv[]) {
 	desc.add_options()
 		("help,h", "Show help")
 		("statfile,s", po::value<std::string>(), "File with statistics. For default it is `heatmap_file.txt`.")
-		("type,t", po::value<std::string>(), "Select statistics type: `sum`, `onetap`, "
-			//", `twotap`, "
+		("type,t", po::value<std::string>(), "Select statistics type: `sum`, `onetap`, `twotap`, "
 			"`daily`."
 			"\n  \t`sum` - sum keys count in different ways."
 			"\n  \t`onetap` - statistics of one tap."
-			//"\n  \t`twotap` - count of two serial taps."
+			"\n  \t`twotap` - count of two serial taps."
 			"\n  \t`daily` - statistics by each day."
 			);
 
@@ -441,6 +603,17 @@ int main(int argc, char* argv[]) {
 	onetap_desc.add_options()
 		("show-zeros,z", "Show keys with zero taps.")
 		("separate-by-layers,S", "Separate any statistics by layers.")
+		("sort,r", po::value<std::string>(), "Can be: `frequent`, `no`, `rare`. Sorted statistics by taps count. If frequent is selected, then most frequent keys will be on the top.")
+		("namefile,f", po::value<std::string>(), "File with key names. If this file is specified, then position of key isn't displayed. To display it, use next option.")
+		("show-pos-with-name,p", "When file with keys names is specified, prints position in format: layer,row,col,\"Name\". Example: 0,1,1,\"A\".")
+		("substr,u", po::value<int>(), "Integer value N. Shows only N first results.");
+
+	po::options_description twotap_desc("`twotap` options");
+	twotap_desc.add_options()
+		("show-zeros,z", "Show keys with zero taps.")
+		("separate-by-layers,S", "Separate any statistics by layers.")
+		("separate-by-keys,K", "Separate this statistics by keys.")
+		("two-names,T", "With `separate-by-keys` option didn't print first key in each occurence:\n\tKey e:\na 1.81%\nb 1.5%\n...")
 		("sort,r", po::value<std::string>(), "Can be: `frequent`, `no`, `rare`. Sorted statistics by taps count. If frequent is selected, then most frequent keys will be on the top.")
 		("namefile,f", po::value<std::string>(), "File with key names. If this file is specified, then position of key isn't displayed. To display it, use next option.")
 		("show-pos-with-name,p", "When file with keys names is specified, prints position in format: layer,row,col,\"Name\". Example: 0,1,1,\"A\".")
@@ -472,6 +645,10 @@ int main(int argc, char* argv[]) {
 				desc.add(onetap_desc);
 				po::store(po::parse_command_line(argc, argv, desc), vm);
 				onetap(vm);
+			} else if (type == "twotap") {
+				desc.add(twotap_desc);
+				po::store(po::parse_command_line(argc, argv, desc), vm);
+				twotap(vm);
 			} else if (type == "daily") {
 				desc.add(daily_desc);
 				po::store(po::parse_command_line(argc, argv, desc), vm);

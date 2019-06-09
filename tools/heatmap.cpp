@@ -53,7 +53,7 @@ void TwoTapHeatmap::onTap(Tap tap) {
 	if (lastTap.layer != -1) {
 		auto tap_copy = tap;
 		tap_copy.layer = 0;
-		v[tap].onTap(tap_copy);
+		v[lastTap].onTap(tap_copy);
 	}
 	lastTap = tap;
 }
