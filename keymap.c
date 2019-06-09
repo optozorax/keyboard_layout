@@ -32,6 +32,7 @@
 #define AL_TTAB M(0)
 #define AL_D LALT(KC_D)
 #define AL_PSCR LALT(KC_PSCR)
+#define TASK LCTL(S(KC_ESC))
 
 // Ctrl keys
 #define CT_LEFT LCTL(KC_LEFT)
@@ -108,6 +109,7 @@ enum custom_keycodes {
   MY_CTAL, // Ctrl+Alt
   MY_CTSH, // Ctrl+Shift
   MY_MCAS, // Ctrl+Alt+Shift
+  MY_SCRN, // Win+Shift+S - screenshot in Windows 10
   
   // Russian specific keys
   RU_3DOT, // Three dots
@@ -165,10 +167,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         SHF_1,    KC_BSPC,  KC_ENT,
 
 
-    SH_PSCR,    KC_ASTR,  KC_EXLM,  KC_RPRN,  KC_LPRN,  KC_QUES,  CT_Z,
-    CT_D,       KC_F,     KC_G,     KC_C,     KC_R,     KC_L,     KC_BSLS,
+    CT_D,       KC_ASTR,  KC_EXLM,  KC_RPRN,  KC_LPRN,  KC_QUES,  CT_Z,
+    CT_S,       KC_F,     KC_G,     KC_C,     KC_R,     KC_L,     KC_BSLS,
                 KC_D,     KC_H,     KC_T,     KC_N,     KC_S,     KC_MINS,
-    CT_S,       KC_B,     KC_M,     KC_W,     KC_V,     KC_Z,     KC_HASH,
+    CT_BSPC,    KC_B,     KC_M,     KC_W,     KC_V,     KC_Z,     KC_HASH,
                           EN_CMSP,  KG_NEXT,  MY_SHAL,  MY_CTAL,  MY_MCAS,
 
         MY_CTSH,  MY_ALT,   MY_WIN,
@@ -245,12 +247,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______,    AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
     DN_PLY2,    DN_STOP,  DN_STR2,  WN_E,     AU_PLAY,
 
-        _______,  _______,  _______,
+        _______,  _______,  TASK,
         _______,  _______,  _______,
 
     KC_NLCK,    KC_F10,   KC_F2,    KC_F4,    KC_F6,    KC_F8,    KC_F11,
     KC_INSERT,  CT_DEL,   KC_HOME,  KC_END,   KC_PGUP,  KC_PGDN,  KC_F12,
-                CT_BSPC,  KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  KC_PSCR,
+                MY_SCRN,  KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  KC_PSCR,
     KC_PAUSE,   CT_ENT,   CT_LEFT,  CT_UP,    CT_DOWN,  CT_RGHT,  AL_PSCR,
                           _______,   _______, DN_STR1,  DN_STOP,  DN_PLY1,
 
@@ -648,6 +650,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         register_code(KC_RGHT);
         unregister_code(KC_RGHT);
         unregister_code(KC_LCTRL);
+      }    
+      return false;
+      break;
+    case MY_SCRN:
+      if (record->event.pressed) {
+        register_code(KC_LWIN);
+        register_code(KC_LSHIFT);
+        register_code(KC_S);
+        unregister_code(KC_S);
+        unregister_code(KC_LSHIFT);
+        unregister_code(KC_LWIN);
       }    
       return false;
       break;
