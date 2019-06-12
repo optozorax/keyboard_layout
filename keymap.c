@@ -22,6 +22,7 @@
 // Ctrl+Shift keys
 #define CS_TAB LCTL(S(KC_TAB))
 #define CS_T LCTL(S(KC_T))
+#define CS_K LCTL(S(KC_K))
 
 // Gui keys
 #define WN_E LGUI(KC_E)
@@ -250,10 +251,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,  _______,  TASK,
         _______,  _______,  _______,
 
-    KC_NLCK,    KC_F10,   KC_F2,    KC_F4,    KC_F6,    KC_F8,    KC_F11,
+    KC_PAUSE,   KC_F10,   KC_F2,    KC_F4,    KC_F6,    KC_F8,    KC_F11,
     KC_INSERT,  CT_DEL,   KC_HOME,  KC_END,   KC_PGUP,  KC_PGDN,  KC_F12,
-                MY_SCRN,  KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  KC_PSCR,
-    KC_PAUSE,   CT_ENT,   CT_LEFT,  CT_UP,    CT_DOWN,  CT_RGHT,  AL_PSCR,
+                CS_K,     KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  KC_PSCR,
+    CT_BSPC,    CT_ENT,   CT_LEFT,  CT_UP,    CT_DOWN,  CT_RGHT,  AL_PSCR,
                           _______,   _______, DN_STR1,  DN_STOP,  DN_PLY1,
 
         _______,  _______,  _______,
@@ -265,7 +266,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_F5,      KC_F6,    CS_T,     CT_T,     CT_W,     CT_J,     CT_C,
     KC_BTN2,    KC_BTN1,  KC_BTN3,  CS_TAB,   CT_TAB,   CT_D,
     _______,    CT_S,     KC_ENT,   KC_UP,    KC_DOWN,  CT_F,     CT_V,
-    _______,    _______,  _______,  _______,  _______,  
+    MY_SCRN,    _______,  _______,  _______,  _______,  
 
         _______,  _______,  _______,
         _______,  _______,  _______,
