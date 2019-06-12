@@ -17,7 +17,7 @@ typedef std::vector<std::string> TableLine;
 typedef std::vector<TableLine> Table;
 
 //-----------------------------------------------------------------------------
-void tablePrint(const Table& table) {
+void tablePrint(const Table& table, bool isUseTab) {
 	std::vector<int> sizes(table[0].size(), 0);
 	for (auto& i : table) {
 		if (i.size() != sizes.size())
@@ -27,8 +27,13 @@ void tablePrint(const Table& table) {
 	}
 
 	for (int i = 0; i < table.size(); ++i) {
-		for (int j = 0; j < table[i].size(); ++j)
-			std::cout << std::setw(sizes[j]) << table[i][j];
+		if (isUseTab) {
+			for (int j = 0; j < table[i].size(); ++j)
+				std::cout << table[i][j] << (i != table[i].size()-1) ? "\t" : "";
+		} else {
+			for (int j = 0; j < table[i].size(); ++j)
+				std::cout << std::setw(sizes[j]+1) << table[i][j];
+		}
 		std::cout << std::endl;
 	}
 }
@@ -57,6 +62,8 @@ int sumTapTaps(Tap tap) {
 	for (int j = 0; j < all.twotap.rowsCount(); ++j) {
 		for (int k = 0; k < all.twotap.colsCount(); ++k) {
 			sum += all.twotap.getTapCount(tap, {k, j, 0});
+			if (tap.row != j && tap.col != k)
+				sum += all.twotap.getTapCount({k, j, tap.layer}, {tap.row, tap.col, 0});
 		}
 	}
 	return sum;	
@@ -148,51 +155,55 @@ int sumRowTaps(int row) {
 
 //-----------------------------------------------------------------------------
 void sum_all(const po::variables_map& vm) {
+	bool isUseTabs = vm.count("use-tabs");
 	if (!vm.count("separate-by-layers")) {
 		std::cout << "Count of all taps: " << sumAllTaps() << std::endl;
 	} else {
 		auto allSum = sumAllTaps();
 		Table table;
+		TableLine head;
+		head.push_back("Layer");
+		head.push_back("Taps");
+		head.push_back("Percent");
+		table.emplace_back(head);
 		for (int i = 0; i < all.onetap.layersCount(); ++i) {
 			auto layerSum = sumLayerTaps(i);
 
 			TableLine line;
-			line.push_back("Layer: ");
 			line.push_back(std::to_string(i));
-			line.push_back(", taps: ");
 			line.push_back(std::to_string(layerSum));
-			line.push_back(", percent: ");
-			line.push_back(getPercent(layerSum, allSum));
-			line.push_back("%");
+			line.push_back(getPercent(layerSum, allSum) + "%");
 			
 			table.emplace_back(line);
 		}
-		tablePrint(table);
+		tablePrint(table, isUseTabs);
 	}
 }
 
 //-----------------------------------------------------------------------------
 void sum_fingers(const po::variables_map& vm) {
+	bool isUseTabs = vm.count("use-tabs");
 	auto print_for_layer = [&] (int layer) {
 		auto allSum = sumLayerTaps(layer);
 		Table table;
+		TableLine head;
+		head.push_back("Hand");
+		head.push_back("Finger");
+		head.push_back("Taps");
+		head.push_back("Percent");
+		table.emplace_back(head);
 		for (int i = 0; i <= 10; ++i) {
 			auto fingerSum = sumFingerTapsLayer(i, layer);
 
 			TableLine line;
-			line.push_back("Hand: ");
 			line.push_back(fingers.getHandName(i));
-			line.push_back(", finger: ");
 			line.push_back(fingers.getFingerName(i));
-			line.push_back(", taps: ");
 			line.push_back(std::to_string(fingerSum));
-			line.push_back(", percent: ");
-			line.push_back(getPercent(fingerSum, allSum));
-			line.push_back("%");
+			line.push_back(getPercent(fingerSum, allSum) + "%");
 			
 			table.emplace_back(line);
 		}
-		tablePrint(table);
+		tablePrint(table, isUseTabs);
 	};
 
 	if (!vm.count("separate-by-layers")) {
@@ -209,24 +220,26 @@ void sum_fingers(const po::variables_map& vm) {
 
 //-----------------------------------------------------------------------------
 void sum_rows(const po::variables_map& vm) {
+	bool isUseTabs = vm.count("use-tabs");
 	auto print_for_layer = [&] (int layer) {
 		auto allSum = sumLayerTaps(layer);
 		Table table;
+		TableLine head;
+		head.push_back("Row");
+		head.push_back("Taps");
+		head.push_back("Percent");
+		table.emplace_back(head);
 		for (int i = 5; i >= 0; --i) {
 			auto rowSum = sumRowTapsLayer(i, layer);
 
 			TableLine line;
-			line.push_back("Row: ");
 			line.push_back(fingers.getRowName(i));
-			line.push_back(", taps: ");
 			line.push_back(std::to_string(rowSum));
-			line.push_back(", percent: ");
-			line.push_back(getPercent(rowSum, allSum));
-			line.push_back("%");
+			line.push_back(getPercent(rowSum, allSum) + "%");
 			
 			table.emplace_back(line);
 		}
-		tablePrint(table);
+		tablePrint(table, isUseTabs);
 	};
 
 	if (!vm.count("separate-by-layers")) {
@@ -309,6 +322,7 @@ void onetap(const po::variables_map& vm) {
 		}
 	}
 
+	bool isUseTabs = vm.count("use-tabs");
 	bool isShowZeros = vm.count("show-zeros");
 	bool isSeparateByLayers = vm.count("separate-by-layers");
 	bool isShowPosWithName = vm.count("show-pos-with-name");
@@ -350,18 +364,20 @@ void onetap(const po::variables_map& vm) {
 	auto print_elems = [&] (std::vector<onetap_elem>& elems, int allSum) {
 		if (substr == -1 || substr > elems.size()) substr = elems.size();
 		Table table;
+		TableLine head;
+		head.push_back("Name");
+		head.push_back("Taps");
+		head.push_back("Percent");
+		table.emplace_back(head);
 		for (int i = 0; i < substr; ++i) {
 			TableLine line;
 			line.push_back(elems[i].name);
-			line.push_back(" taps: ");
 			line.push_back(std::to_string(elems[i].taps));
-			line.push_back(", percent: ");
-			line.push_back(getPercent(elems[i].taps, allSum));
-			line.push_back("%");
+			line.push_back(getPercent(elems[i].taps, allSum) + "%");
 
 			table.emplace_back(line);
 		}
-		tablePrint(table);
+		tablePrint(table, isUseTabs);
 	};
 
 	if (isSeparateByLayers) {
@@ -411,6 +427,7 @@ void twotap(const po::variables_map& vm) {
 		}
 	}
 
+	bool isUseTabs = vm.count("use-tabs");
 	bool isShowZeros = vm.count("show-zeros");
 	bool isSeparateByLayers = vm.count("separate-by-layers");
 	bool isSeparateByKeys = vm.count("separate-by-keys");
@@ -429,25 +446,30 @@ void twotap(const po::variables_map& vm) {
 		return name;
 	};
 	auto make_for_tap = [&] (std::vector<twotap_elem>& elems, Tap tap1, std::string tap1_name) {
+		auto add_taps = [&] (Tap tap1, Tap tap2) {
+			int taps = all.twotap.getTapCount(tap1, tap2);
+			if (!isShowZeros && taps != 0) {
+				std::string tap2_name = get_tap_name(tap2);
+
+				std::string twotap_name;
+				if (tap1_name.size() == 0) {
+					twotap_name = tap2_name;
+				} else if (tap1_name.size() == 1 && tap2_name.size() == 1) {
+					twotap_name = tap1_name + tap2_name;
+				} else {
+					twotap_name = tap1_name + " + " + tap2_name;
+				}
+
+				elems.push_back({twotap_name, tap1, tap2, taps});
+			}
+		};
 		for (int j2 = 0; j2 < all.twotap.rowsCount(); ++j2) {
 			for (int k2 = 0; k2 < all.twotap.colsCount(); ++k2) {
-				Tap tap2{j2, k2, 0};
+				Tap tap2{j2, k2, tap1.layer};
 
-				int taps = all.twotap.getTapCount(tap1, tap2);
-				if (!isShowZeros && taps != 0) {
-					std::string tap2_name = get_tap_name({j2, k2, tap1.layer});
-
-					std::string twotap_name;
-					if (tap1_name.size() == 0) {
-						twotap_name = tap2_name;
-					} else if (tap1_name.size() == 1 && tap2_name.size() == 1) {
-						twotap_name = tap1_name + tap2_name;
-					} else {
-						twotap_name = tap1_name + " + " + tap2_name;
-					}
-
-					elems.push_back({twotap_name, tap1, tap2, taps});
-				}
+				add_taps(tap1, tap2);
+				if (isSeparateByKeys && tap1.row != tap2.row && tap1.col != tap2.row)
+					add_taps(tap2, tap1);
 			}
 		}
 	};
@@ -478,18 +500,20 @@ void twotap(const po::variables_map& vm) {
 		int loc_substr = substr;
 		if (loc_substr == -1 || loc_substr > elems.size()) loc_substr = elems.size();
 		Table table;
+		TableLine head;
+		head.push_back("Name");
+		head.push_back("Taps");
+		head.push_back("Percent");
+		table.emplace_back(head);
 		for (int i = 0; i < loc_substr; ++i) {
 			TableLine line;
 			line.push_back(elems[i].name);
-			line.push_back(" taps: ");
 			line.push_back(std::to_string(elems[i].count));
-			line.push_back(", percent: ");
-			line.push_back(getPercent(elems[i].count, allSum));
-			line.push_back("%");
+			line.push_back(getPercent(elems[i].count, allSum) + "%");
 
 			table.emplace_back(line);
 		}
-		tablePrint(table);
+		tablePrint(table, isUseTabs);
 	};
 
 	if (isSeparateByKeys) {
@@ -541,6 +565,7 @@ void twotap(const po::variables_map& vm) {
 
 //-----------------------------------------------------------------------------
 void daily(const po::variables_map& vm) {
+	bool isUseTabs = vm.count("use-tabs");
 	int days = 31;
 	if (vm.count("period")) {
 		auto period = vm["period"].as<std::string>();
@@ -562,17 +587,19 @@ void daily(const po::variables_map& vm) {
 
 	int today = all.daytap.getToday();
 	Table table;
+	TableLine head;
+	head.push_back("Date");
+	head.push_back("Taps");
+	table.emplace_back(head);
 	for (auto& i : all.daytap.getStatistics()) {
 		if (today-i.first <= days || days == -1) {
 			TableLine line;
 			line.push_back(print_date(i.first));
-			line.push_back(": ");
 			line.push_back(std::to_string(i.second));
-			line.push_back(" taps");
 			table.emplace_back(line);
 		}
 	}
-	tablePrint(table);
+	tablePrint(table, isUseTabs);
 }
 
 //-----------------------------------------------------------------------------
