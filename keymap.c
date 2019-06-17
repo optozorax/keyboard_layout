@@ -594,6 +594,33 @@ bool process_my_mod(uint16_t keycode, keyrecord_t *record) {
 }
 
 //-----------------------------------------------------------------------------
+keyrecord_t last = {};
+uint32_t last_key_time = 0;
+uint8_t last_layer = 255;
+bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
+	// р = col 2, row 8, layer 2
+	// ш = col 3, row 8, layer 2
+	//   = col 5, row 10, layer 2
+	bool returned = true;
+	if (record->event.pressed) {
+		if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
+			if ((last.event.key.col == 2 && last.event.key.row == 8 && last_layer == 2) ||
+				(last.event.key.col == 3 && last.event.key.row == 8 && last_layer == 2) ||
+				(last.event.key.col == 5 && last.event.key.row == 10 && last_layer == 2)) {
+				if (timer_read() - last_key_time < 100) {
+					returned = false;
+				}
+			}
+		}
+	}
+
+	last_key_time = timer_read();
+	last = *record;
+	last_layer = biton32(layer_state);
+	return returned;
+}
+
+//-----------------------------------------------------------------------------
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   user_timer();
   layer_state_set_user(layer_state);
@@ -602,6 +629,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   uprintf("KL: col=%d, row=%d, pressed=%d, layer=%d\n", 
     record->event.key.col, record->event.key.row, record->event.pressed, biton32(layer_state));
   #endif
+
+  if (!process_double_letters(keycode, record))
+  	return false;
 
   if (!process_dynamic_marco(keycode, record))
     return false;
