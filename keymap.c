@@ -23,17 +23,35 @@
 #define CS_TAB LCTL(S(KC_TAB))
 #define CS_T LCTL(S(KC_T))
 #define CS_K LCTL(S(KC_K))
+#define TASK LCTL(S(KC_ESC))
+#define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
+// #define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
 
 // Gui keys
 #define WN_E LGUI(KC_E)
 #define WN_D LGUI(KC_D)
+#define WN_1 LGUI(KC_1) // Telegram
+#define WN_2 LGUI(KC_2) // Yabrowser
+#define WN_3 LGUI(KC_3) // Console
+#define WN_4 LGUI(KC_4) // Nautilus
+#define WN_5 LGUI(KC_5) // CLion
+#define WN_6 LGUI(KC_6) // Sublime
+#define WN_7 LGUI(KC_7) // Firefox
+#define WN_8 LGUI(KC_8) // Git ahead
+#define WN_RGHT LGUI(KC_RGHT) // Window to right half
+#define WN_LEFT LGUI(KC_LEFT) // Window to left half
+#define WS_RGHT LGUI(S(KC_RGHT)) // Window to right display
+#define WS_LEFT LGUI(S(KC_LEFT)) // Window to left display
 
 // Alt keys
 #define AL_TAB LALT(KC_TAB)
 #define AL_TTAB M(0)
 #define AL_D LALT(KC_D)
 #define AL_PSCR LALT(KC_PSCR)
-#define TASK LCTL(S(KC_ESC))
+#define AL_F6 LALT(KC_F6) // Alt+Tab between same windows
+#define AL_ESC LALT(KC_ESC) // Alt+Tab with instant preview
+#define AL_F10 LALT(KC_F10) // Maximize window
+#define AL_F4 LALT(KC_F4) // Close window
 
 // Ctrl keys
 #define CT_LEFT LCTL(KC_LEFT)
@@ -110,7 +128,6 @@ enum custom_keycodes {
   MY_CTAL, // Ctrl+Alt
   MY_CTSH, // Ctrl+Shift
   MY_MCAS, // Ctrl+Alt+Shift
-  MY_SCRN, // Win+Shift+S - screenshot in Windows 10
   
   // Russian specific keys
   RU_3DOT, // Three dots
@@ -272,9 +289,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,  _______,  _______,
 
     _______,    _______,  _______,  _______,  _______,  _______,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
-                _______,  MS_LEFT,  MS_UP,    MS_DOWN,  MS_RGHT,  _______,
-    _______,    _______,  MSWH_LF,  MSWH_UP,  MSWH_DW,  MSWH_RG,  _______,
+    _______,    WN_6,     WN_1,     WN_2,     WN_3,     WN_4,     WN_5,
+                WN_7,     AL_ESC,   AL_F6,    AL_F10,   _______,  AL_F4,
+    _______,    WN_8,     WN_LEFT,  WN_RGHT,  WS_LEFT,  WS_RGHT,  _______,
                 _______,  _______,  _______,  _______,  _______,
 
         _______,  _______,  _______,
@@ -681,17 +698,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         register_code(KC_RGHT);
         unregister_code(KC_RGHT);
         unregister_code(KC_LCTRL);
-      }    
-      return false;
-      break;
-    case MY_SCRN:
-      if (record->event.pressed) {
-        register_code(KC_LWIN);
-        register_code(KC_LSHIFT);
-        register_code(KC_S);
-        unregister_code(KC_S);
-        unregister_code(KC_LSHIFT);
-        unregister_code(KC_LWIN);
       }    
       return false;
       break;
