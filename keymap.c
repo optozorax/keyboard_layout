@@ -152,6 +152,8 @@ enum custom_keycodes {
 
   KG_NEXT, // Klavogonki next race (Tab Tab Ctrl+Right)
 
+  LED_DN,
+
   // It always will be the last
   DYNAMIC_MACRO_RANGE
 };
@@ -262,7 +264,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     TG(4),      KC_F7,    KC_F5,    KC_F3,    KC_F1,    KC_F9,    CT_X,
     AU_MUTE,    SH_F11,   CT_F10,   KC_F10,   KC_F11,   WN_D,     CT_C,
     _______,    AU_VOLU,  AU_NEXT,  CS_TAB,   CT_TAB,   AL_TAB,
-    _______,    AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
+    LED_DN,     AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
     DN_PLY2,    DN_STOP,  DN_STR2,  WN_E,     AU_PLAY,
 
         _______,  _______,  TASK,
@@ -529,6 +531,67 @@ bool process_oneshot_shift(uint16_t keycode, keyrecord_t *record) {
 }
 
 //-----------------------------------------------------------------------------
+#define L000 0
+#define L001 1
+#define L010 2
+#define L011 3
+#define L100 4
+#define L101 5
+#define L110 6
+#define L111 7
+
+bool is_led_dance = false;
+uint32_t led_dance_start_time = 0;
+uint8_t led_dance_animation[] = {
+  #define PING_PONG \
+  L001, L001, L001, \
+  L010, L010,       \
+  L100, L100, L100, \
+  L010, L010,
+
+  #define PING_LONG_PONG
+  L001, L001, L001, \
+  L011,             \
+  L010, L010, L010, \
+  L110,             \
+  L100, L100, L100, \
+  L110,             \
+  L010, L010, L010, \
+  L011,
+
+  PING_PONG
+  PING_PONG
+  PING_PONG
+  PING_LONG_PONG
+  PING_LONG_PONG
+  PING_LONG_PONG
+
+  L000, L000, L000,
+  L111, L111, L111,
+  L000, L000,
+  L111, L111,
+  L000,
+  L111,
+  L000,
+  L111,
+  L000,
+  L111,
+};
+uint8_t animation_count = sizeof(led_dance_animation)/sizeof(uint8_t);
+uint8_t one_animation_time = 50;
+void process_led_dance(void) {
+  if (is_led_dance) {
+    uint32_t temp = timer_read() - led_dance_start_time;
+    temp /= one_animation_time;
+    temp %= animation_count;
+    temp = led_dance_animation[temp];
+    if (temp % 2) ergodox_right_led_3_on(); else ergodox_right_led_3_off(); temp /= 2;
+    if (temp % 2) ergodox_right_led_2_on(); else ergodox_right_led_2_off(); temp /= 2;
+    if (temp % 2) ergodox_right_led_1_on(); else ergodox_right_led_1_off(); temp /= 2;
+  }
+}
+
+//-----------------------------------------------------------------------------
 void user_timer(void) {
   if (oneShotLight && (timer_read() - shift_time >= 1000)) {
     currentLayer = 0 + layer_offset;
@@ -540,6 +603,8 @@ void user_timer(void) {
     oneShotLight = false;
     layer_state_set_user(layer_state);
   }
+
+  process_led_dance();
 }
 
 //-----------------------------------------------------------------------------
@@ -615,25 +680,29 @@ keyrecord_t last = {};
 uint32_t last_key_time = 0;
 uint8_t last_layer = 255;
 bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
-	// р = col 2, row 8, layer 2
-	// ш = col 3, row 8, layer 2
-	//   = col 5, row 10, layer 2
+	// р = col 2, row 8
+	// ш = col 3, row 8
+	//   = col 5, row 10
+	// м = col 2, row 2
 	bool returned = true;
 	if (record->event.pressed) {
 		if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
-			if ((last.event.key.col == 2 && last.event.key.row == 8 && last_layer == 2) ||
-				(last.event.key.col == 3 && last.event.key.row == 8 && last_layer == 2) ||
-				(last.event.key.col == 5 && last.event.key.row == 10 && last_layer == 2)) {
-				if (timer_read() - last_key_time < 100) {
+			if ((last.event.key.col == 2 && last.event.key.row == 8) ||
+			   (last.event.key.col == 3 && last.event.key.row == 8) ||
+			   (last.event.key.col == 5 && last.event.key.row == 10) ||
+			   (last.event.key.col == 2 && last.event.key.row == 2)) {
+				if (timer_read() - last_key_time < 200) {
 					returned = false;
 				}
 			}
 		}
 	}
 
-	last_key_time = timer_read();
-	last = *record;
-	last_layer = biton32(layer_state);
+	if (record->event.pressed) {
+		last_key_time = timer_read();
+		last = *record;
+		last_layer = biton32(layer_state);
+	}
 	return returned;
 }
 
@@ -666,10 +735,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch(keycode) {
     case MY_LANG:
       if (record->event.pressed && !layerChange) {
-        register_code(KC_LALT);
-        register_code(KC_LSHIFT);
-        unregister_code(KC_LSHIFT);
-        unregister_code(KC_LALT);
+        register_code(KC_LGUI);
+        register_code(KC_SPACE);
+        unregister_code(KC_SPACE);
+        unregister_code(KC_LGUI);
         if (currentLayer == 0) {
           currentLayer = 2;
           layer_on(2);
@@ -808,6 +877,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       } break;
+    case LED_DN: {
+      if (record->event.pressed) {
+        is_led_dance = !is_led_dance;
+        if (is_led_dance)
+          led_dance_start_time = timer_read();
+      }
+      return false;
+      } break;
   }
 
   return true;
@@ -817,6 +894,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // Set led by value of layer
 uint32_t layer_state_set_user(uint32_t state) {
     uint8_t layer = biton32(state);
+
+    if (is_led_dance) return state;
 
     if (oneShotLight) {
       ergodox_board_led_off();
