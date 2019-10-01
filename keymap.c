@@ -69,9 +69,6 @@
 #define CT_3 LCTL(KC_3)
 #define CT_4 LCTL(KC_4)
 #define CT_5 LCTL(KC_5)
-#define CT_X LCTL(KC_X)
-#define CT_C LCTL(KC_C)
-#define CT_V LCTL(KC_V)
 #define CT_Z LCTL(KC_Z)
 #define CT_T LCTL(KC_T)
 #define CT_W LCTL(KC_W)
@@ -82,6 +79,14 @@
 #define CT_A LCTL(KC_A)
 #define CT_S LCTL(KC_S)
 #define CT_D LCTL(KC_D)
+
+// Для копипаста с учётом консоли
+#define CT_X LCTL(KC_X)
+#define CT_C LCTL(KC_INSERT)
+#define CT_V S(KC_INSERT)
+
+// Real Ctrl+C for terminating programs
+#define CTRL_C LCTL(KC_C)
 
 // Inverted shift keys
 #define IS_0 IS(KC_0)
@@ -152,7 +157,14 @@ enum custom_keycodes {
 
   KG_NEXT, // Klavogonki next race (Tab Tab Ctrl+Right)
 
+  MY_PLAY, // Stop music in browser for yandex-radio, rabota-specific
+
   LED_DN,
+
+  LEFT_5, // 5 x left
+  UP_1C, // 10 x ctrl+up
+  DOWN_1C, // 10 x ctrl+down
+  RGHT_5, // 5 x right
 
   // It always will be the last
   DYNAMIC_MACRO_RANGE
@@ -181,7 +193,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,     KC_SCLN,  KC_LCBR,  KC_RCBR,  KC_P,     KC_Y,   CT_C,
     MO(4),      KC_A,     KC_O,     KC_E,     KC_U,     KC_I,
     MO(5),      KC_QUOT,  KC_Q,     KC_J,     KC_K,     KC_X,   CT_V,
-    TG(4),      TG(5),    TG(6),    CT_SLSH,  KC_SLSH,
+    MO(7),      TG(4),    TG(5),    CT_SLSH,  KC_SLSH,
 
         CT_A,     KC_DEL,   MY_CTRL,
         SHF_1,    KC_BSPC,  KC_ENT,
@@ -191,7 +203,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     CT_S,       KC_F,     KC_G,     KC_C,     KC_R,     KC_L,     KC_BSLS,
                 KC_D,     KC_H,     KC_T,     KC_N,     KC_S,     KC_MINS,
     CT_BSPC,    KC_B,     KC_M,     KC_W,     KC_V,     KC_Z,     KC_HASH,
-                          EN_CMSP,  KG_NEXT,  MY_SHAL,  MY_CTAL,  MY_MCAS,
+                          EN_CMSP,  KG_NEXT,  MY_SHAL,  MY_CTAL,  CTRL_C,
 
         MY_CTSH,  MY_ALT,   MY_WIN,
         MY_LANG,  KC_DOT,   KC_SPC),
@@ -262,10 +274,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //---------------------------------------------------------------------------
   [4] = LAYOUT_ergodox(
     TG(4),      KC_F7,    KC_F5,    KC_F3,    KC_F1,    KC_F9,    CT_X,
-    AU_MUTE,    SH_F11,   CT_F10,   KC_F10,   KC_F11,   WN_D,     CT_C,
+    AU_MUTE,    LALT(S(KC_F9)),   KC_F8,   KC_F9,    LCTL(KC_B),   WN_D,     CT_C,
     _______,    AU_VOLU,  AU_NEXT,  CS_TAB,   CT_TAB,   AL_TAB,
     LED_DN,     AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
-    DN_PLY2,    DN_STOP,  DN_STR2,  WN_E,     AU_PLAY,
+    DN_PLY2,    DN_STOP,  DN_STR2,  WN_E,     MY_PLAY,  //AU_PLAY,
 
         _______,  _______,  TASK,
         _______,  _______,  _______,
@@ -319,6 +331,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
         XXXXXXX,   XXXXXXX,   XXXXXXX,
         XXXXXXX,   XXXXXXX,   XXXXXXX),
+
+  //---------------------------------------------------------------------------
+  [7] = LAYOUT_ergodox(
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    _______,    _______,  _______,  _______,  _______,  _______,
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    _______,    _______,  _______,  _______,  _______,
+
+        _______,  _______,  _______,
+        _______,  _______,  _______,
+
+
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+                _______,  LEFT_5,   UP_1C,    DOWN_1C,   RGHT_5,  _______,
+    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+                          _______,  _______,  _______,  _______,  _______,
+
+        _______,  _______,  _______,
+        _______,  _______,  _______),
 };
 
 //-----------------------------------------------------------------------------
@@ -684,13 +717,15 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
 	// ш = col 3, row 8
 	//   = col 5, row 10
 	// м = col 2, row 2
+  // в = col 2, row 3
 	bool returned = true;
 	if (record->event.pressed) {
 		if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
 			if ((last.event.key.col == 2 && last.event.key.row == 8) ||
 			   (last.event.key.col == 3 && last.event.key.row == 8) ||
 			   (last.event.key.col == 5 && last.event.key.row == 10) ||
-			   (last.event.key.col == 2 && last.event.key.row == 2)) {
+			   (last.event.key.col == 2 && last.event.key.row == 2) ||
+         (last.event.key.col == 2 && last.event.key.row == 3)) {
 				if (timer_read() - last_key_time < 200) {
 					returned = false;
 				}
@@ -735,10 +770,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch(keycode) {
     case MY_LANG:
       if (record->event.pressed && !layerChange) {
-        register_code(KC_LGUI);
-        register_code(KC_SPACE);
-        unregister_code(KC_SPACE);
-        unregister_code(KC_LGUI);
+        register_code(KC_CAPS);
+        unregister_code(KC_CAPS);
         if (currentLayer == 0) {
           currentLayer = 2;
           layer_on(2);
@@ -877,6 +910,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       } break;
+    case MY_PLAY: {
+      if (record->event.pressed) {
+        register_code(KC_LGUI);
+        register_code(KC_2);
+        unregister_code(KC_2);
+        unregister_code(KC_LGUI);
+
+        register_code(KC_LCTRL);
+        register_code(KC_2);
+        unregister_code(KC_2);
+        unregister_code(KC_LCTRL);
+
+        register_code(KC_ESC);
+        unregister_code(KC_ESC);
+
+        _delay_ms(100);
+        register_code(KC_SPC);
+        _delay_ms(50);
+        unregister_code(KC_SPC);
+      }
+      return false;
+      } break;
     case LED_DN: {
       if (record->event.pressed) {
         is_led_dance = !is_led_dance;
@@ -885,6 +940,47 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       } break;
+
+    case LEFT_5: {
+      if (record->event.pressed) {
+        for (int i = 0; i < 5; ++i) {
+          register_code(KC_LEFT);
+          unregister_code(KC_LEFT);
+        }
+      }
+      return false;
+    } break;
+    case UP_1C: {
+      if (record->event.pressed) {
+        for (int i = 0; i < 10; ++i) {
+          register_code(KC_LCTL);
+          register_code(KC_UP);
+          unregister_code(KC_UP);
+          unregister_code(KC_LCTL);
+        }
+      }
+      return false;
+    } break;
+    case DOWN_1C: {
+      if (record->event.pressed) {
+        for (int i = 0; i < 10; ++i) {
+          register_code(KC_LCTL);
+          register_code(KC_DOWN);
+          unregister_code(KC_DOWN);
+          unregister_code(KC_LCTL);
+        }
+      }
+      return false;
+    } break;
+    case RGHT_5: {
+      if (record->event.pressed) {
+        for (int i = 0; i < 5; ++i) {
+          register_code(KC_RIGHT);
+          unregister_code(KC_RIGHT);
+        }
+      }
+      return false;
+    } break;
   }
 
   return true;
@@ -937,9 +1033,10 @@ uint32_t layer_state_set_user(uint32_t state) {
           break;
         case 7:
           ergodox_right_led_1_on();
-          ergodox_right_led_3_on();
+          ergodox_right_led_2_on();
           break;
         case 8:
+          ergodox_right_led_1_on();
           ergodox_right_led_2_on();
           ergodox_right_led_3_on();
           break;
