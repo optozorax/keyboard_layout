@@ -24,8 +24,8 @@
 #define CS_T LCTL(S(KC_T))
 #define CS_K LCTL(S(KC_K))
 #define TASK LCTL(S(KC_ESC))
-#define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
-// #define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
+// #define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
+#define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
 
 // Gui keys
 #define WN_E LGUI(KC_E)
@@ -717,28 +717,28 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
 	// ш = col 3, row 8
 	//   = col 5, row 10
 	// м = col 2, row 2
-  // в = col 2, row 3
-	bool returned = true;
-	if (record->event.pressed) {
-		if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
-			if ((last.event.key.col == 2 && last.event.key.row == 8) ||
-			   (last.event.key.col == 3 && last.event.key.row == 8) ||
-			   (last.event.key.col == 5 && last.event.key.row == 10) ||
-			   (last.event.key.col == 2 && last.event.key.row == 2) ||
-         (last.event.key.col == 2 && last.event.key.row == 3)) {
-				if (timer_read() - last_key_time < 200) {
-					returned = false;
-				}
-			}
-		}
-	}
-
-	if (record->event.pressed) {
-		last_key_time = timer_read();
-		last = *record;
-		last_layer = biton32(layer_state);
-	}
-	return returned;
+	// в = col 2, row 3
+	// bool returned = true;
+	// if (record->event.pressed) {
+	// 	if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
+	// 		if ((last.event.key.col == 2 && last.event.key.row == 8) ||
+	// 		   (last.event.key.col == 3 && last.event.key.row == 8) ||
+	// 		   (last.event.key.col == 5 && last.event.key.row == 10) ||
+	// 		   (last.event.key.col == 2 && last.event.key.row == 2) ||
+	//         (last.event.key.col == 2 && last.event.key.row == 3)) {
+	// 			if (timer_read() - last_key_time < 200) {
+	// 				returned = false;
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// if (record->event.pressed) {
+	// 	last_key_time = timer_read();
+	// 	last = *record;
+	// 	last_layer = biton32(layer_state);
+	// }
+	// return returned;
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -770,8 +770,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch(keycode) {
     case MY_LANG:
       if (record->event.pressed && !layerChange) {
-        register_code(KC_CAPS);
-        unregister_code(KC_CAPS);
+        register_code(KC_LSHIFT);
+        register_code(KC_LCTRL);
+        unregister_code(KC_LCTRL);
+        unregister_code(KC_LSHIFT);
         if (currentLayer == 0) {
           currentLayer = 2;
           layer_on(2);
