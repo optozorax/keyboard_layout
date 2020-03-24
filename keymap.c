@@ -24,8 +24,6 @@
 #define CS_T LCTL(S(KC_T))
 #define CS_K LCTL(S(KC_K))
 #define TASK LCTL(S(KC_ESC))
-// #define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
-#define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
 
 // Gui keys
 #define WN_E LGUI(KC_E)
@@ -80,10 +78,9 @@
 #define CT_S LCTL(KC_S)
 #define CT_D LCTL(KC_D)
 
-// Для копипаста с учётом консоли
 #define CT_X LCTL(KC_X)
-#define CT_C LCTL(KC_INSERT)
-#define CT_V S(KC_INSERT)
+#define CT_C LCTL(KC_C)
+#define CT_V LCTL(KC_V)
 
 // Real Ctrl+C for terminating programs
 #define CTRL_C LCTL(KC_C)
@@ -165,6 +162,8 @@ enum custom_keycodes {
   UP_1C, // 10 x ctrl+up
   DOWN_1C, // 10 x ctrl+down
   RGHT_5, // 5 x right
+
+  MY_SCRN,
 
   // It always will be the last
   DYNAMIC_MACRO_RANGE
@@ -277,7 +276,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     AU_MUTE,    LALT(S(KC_F9)),   KC_F8,   KC_F9,    LCTL(KC_B),   WN_D,     CT_C,
     _______,    AU_VOLU,  AU_NEXT,  CS_TAB,   CT_TAB,   AL_TAB,
     LED_DN,     AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
-    DN_PLY2,    DN_STOP,  DN_STR2,  WN_E,     MY_PLAY,  //AU_PLAY,
+    RE_LANG,    _______,  _______,  WN_E,     MY_PLAY,  //AU_PLAY,
 
         _______,  _______,  TASK,
         _______,  _______,  _______,
@@ -286,7 +285,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_INSERT,  CT_DEL,   KC_HOME,  KC_END,   KC_PGUP,  KC_PGDN,  KC_F12,
                 CS_K,     KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  KC_PSCR,
     CT_BSPC,    CT_ENT,   CT_LEFT,  CT_UP,    CT_DOWN,  CT_RGHT,  AL_PSCR,
-                          _______,   _______, DN_STR1,  DN_STOP,  DN_PLY1,
+                          _______,  LANG__1,  LANG__2,  LANG__3,  LANG__4,
 
         _______,  _______,  _______,
         _______,  _______,  _______),
@@ -741,6 +740,70 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
 	return true;
 }
 
+// #define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
+#define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
+
+enum LANG_CHANGE {
+	CAPS,
+	ALT_SHIFT,
+	CTRL_SHIFT,
+	WIN_SPACE
+}
+
+int current_lang_change = ALT_SHIFT;
+void change_lang() {
+	switch current_lang_change {
+		case CAPS: {
+			register_code(KC_CAPS);
+    		unregister_code(KC_CAPS);
+		} break;
+		case ALT_SHIFT: {
+			register_code(KC_LALT);
+		    register_code(KC_LSHIFT);
+		    unregister_code(KC_LSHIFT);
+		    unregister_code(KC_LALT);
+		} break;
+		case CTRL_SHIFT: {
+			register_code(KC_LCTRL);
+		    register_code(KC_LSHIFT);
+		    unregister_code(KC_LSHIFT);
+		    unregister_code(KC_LCTL);
+		} break;
+		case WIN_SPACE: {
+			register_code(KC_LGUI);
+		    register_code(KC_SPACE);
+		    unregister_code(KC_SPACE);
+		    unregister_code(KC_LGUI);
+		} break;
+	}
+}
+
+void screenshot() {
+	// Костыль, когда я определяю кнопку для скриншота по переключению языка
+	switch current_lang_change {
+		case CAPS: {
+			register_code(KC_LCTRL);
+			register_code(KC_LSHIFT);
+			register_code(KC_PSCR);
+			unregister_code(KC_PSCR);
+			unregister_code(KC_LSHIFT);
+			unregister_code(KC_LCTRL);
+		} break;
+		case ALT_SHIFT:
+		case CTRL_SHIFT: {
+			register_code(KC_LGUI);
+		    register_code(KC_LSHIFT);
+		    register_code(KC_S);
+			unregister_code(KC_S);
+		    unregister_code(KC_LSHIFT);
+		    unregister_code(KC_LGUI);
+		} break;
+		case WIN_SPACE: {
+			// No screenshot, maybe it android
+		} break;
+	}	
+}
+
 //-----------------------------------------------------------------------------
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   user_timer();
@@ -768,12 +831,45 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return false;
 
   switch(keycode) {
+    case MY_SCRN:
+      if (record->event.pressed) {
+        screenshot();
+      }
+      return false;
+      break;
+    case LANG__1:
+      if (record->event.pressed) {
+        current_lang_change = CAPS;
+      }
+      return false;
+      break;
+    case LANG__2:
+      if (record->event.pressed) {
+        current_lang_change = ALT_SHIFT;
+      }
+      return false;
+      break;
+    case LANG__3:
+      if (record->event.pressed) {
+        current_lang_change = CTRL_SHIFT;
+      }
+      return false;
+      break;
+    case LANG__4:
+      if (record->event.pressed) {
+        current_lang_change = WIN_SPACE;
+      }
+      return false;
+      break;
+  	case RE_LANG:
+  	  if (record->event.pressed) {
+  	  	change_lang();
+  	  }
+      return false;
+      break;
     case MY_LANG:
       if (record->event.pressed && !layerChange) {
-        register_code(KC_LSHIFT);
-        register_code(KC_LCTRL);
-        unregister_code(KC_LCTRL);
-        unregister_code(KC_LSHIFT);
+        change_lang();
         if (currentLayer == 0) {
           currentLayer = 2;
           layer_on(2);
