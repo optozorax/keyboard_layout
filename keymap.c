@@ -121,6 +121,8 @@ enum custom_keycodes {
 
   // Change language
   MY_LANG,
+  RE_LANG,
+  LANG__1,  LANG__2,  LANG__3,  LANG__4,
 
   // All of these modificators on 0 layer
   MY_CTRL,
@@ -748,11 +750,11 @@ enum LANG_CHANGE {
 	ALT_SHIFT,
 	CTRL_SHIFT,
 	WIN_SPACE
-}
+};
 
 int current_lang_change = ALT_SHIFT;
 void change_lang() {
-	switch current_lang_change {
+	switch (current_lang_change) {
 		case CAPS: {
 			register_code(KC_CAPS);
     		unregister_code(KC_CAPS);
@@ -780,7 +782,7 @@ void change_lang() {
 
 void screenshot() {
 	// Костыль, когда я определяю кнопку для скриншота по переключению языка
-	switch current_lang_change {
+	switch (current_lang_change) {
 		case CAPS: {
 			register_code(KC_LCTRL);
 			register_code(KC_LSHIFT);
