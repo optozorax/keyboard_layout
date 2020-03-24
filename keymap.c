@@ -742,9 +742,6 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
 	return true;
 }
 
-// #define MY_SCRN LCTL(S(KC_PSCR)) // Screenshot in ubuntu
-#define MY_SCRN LGUI(S(KC_S)) // Win+Shift+S - screenshot in Windows 10
-
 enum LANG_CHANGE {
 	CAPS,
 	ALT_SHIFT,
