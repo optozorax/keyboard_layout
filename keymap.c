@@ -753,7 +753,7 @@ enum LANG_CHANGE {
 };
 
 int current_lang_change = ALT_SHIFT;
-void change_lang() {
+void change_lang(void) {
 	switch (current_lang_change) {
 		case CAPS: {
 			register_code(KC_CAPS);
@@ -780,7 +780,7 @@ void change_lang() {
 	}
 }
 
-void screenshot() {
+void screenshot(void) {
 	// Костыль, когда я определяю кнопку для скриншота по переключению языка
 	switch (current_lang_change) {
 		case CAPS: {
