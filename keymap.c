@@ -167,6 +167,8 @@ enum custom_keycodes {
 
   MY_SCRN,
 
+  I3_CR,
+
   // It always will be the last
   DYNAMIC_MACRO_RANGE
 };
@@ -194,7 +196,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,     KC_SCLN,  KC_LCBR,  KC_RCBR,  KC_P,     KC_Y,   CT_C,
     MO(4),      KC_A,     KC_O,     KC_E,     KC_U,     KC_I,
     MO(5),      KC_QUOT,  KC_Q,     KC_J,     KC_K,     KC_X,   CT_V,
-    MO(7),      TG(4),    TG(5),    CT_SLSH,  KC_SLSH,
+    MO(7),      TG(4),    TG(5),    KC_SLSH,  MO(7),
 
         CT_A,     KC_DEL,   MY_CTRL,
         SHF_1,    KC_BSPC,  KC_ENT,
@@ -236,7 +238,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______,    KC_Q,     KC_W,     KC_E,     KC_T,     KC_A,     CT_C,
     _______,    KC_R,     KC_V,     KC_D,     KC_F,     KC_G,
     _______,    KC_Z,     KC_X,     KC_C,     KC_B,     KC_S,     CT_V,
-    _______,    _______,  _______,  _______,  KC_UNDS,
+    _______,    _______,  _______,  _______,  MO(7),
 
         _______,   _______,   _______,
         SHF_3,     _______,   _______,
@@ -335,20 +337,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   //---------------------------------------------------------------------------
   [7] = LAYOUT_ergodox(
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    _______,  LGUI(KC_6),  LGUI(KC_5),  LGUI(KC_4),  LGUI(KC_3),  LGUI(KC_2),  LGUI(KC_1),
+    LGUI(LCTL(KC_SPACE)),  LGUI(KC_F4),  LGUI(KC_F3),  LGUI(KC_F2),  LGUI(KC_F1),  LGUI(S(KC_Q)),  LGUI(KC_A),
+    LGUI(LCTL(KC_LEFT)),  LGUI(KC_LEFT),  LGUI(KC_DOWN),  LGUI(KC_UP),  LGUI(KC_RIGHT),  LGUI(LCTL(KC_RIGHT)),
+    LGUI(LALT(KC_LEFT)),  LGUI(KC_F8),  LGUI(KC_F7),  LGUI(KC_F6),  LGUI(KC_F5),  LGUI(LALT(KC_RIGHT)),  LGUI(KC_I),
     _______,    _______,  _______,  _______,  _______,
 
         _______,  _______,  _______,
         _______,  _______,  _______,
 
 
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
-                _______,  LEFT_5,   UP_1C,    DOWN_1C,   RGHT_5,  _______,
-    _______,    _______,  _______,  _______,  _______,  _______,  _______,
+    LGUI(S(KC_1)),    LGUI(S(KC_2)),  LGUI(S(KC_3)),  LGUI(S(KC_4)),  LGUI(S(KC_5)),  LGUI(S(KC_6)),  _______,
+    LGUI(KC_F), LGUI(KC_R),  KC_LEFT,  KC_UP,  KC_DOWN,  KC_RIGHT,  LGUI(KC_SPACE),
+                LGUI(KC_D),  LGUI(S(KC_LEFT)),  LGUI(S(KC_UP)),    LGUI(S(KC_DOWN)),  LGUI(S(KC_RIGHT)),  _______,
+    I3_CR,    LGUI(KC_H),  LGUI(KC_V),  LGUI(KC_E),  LGUI(KC_W),  LGUI(KC_S),  _______,
                           _______,  _______,  _______,  _______,  _______,
 
         _______,  _______,  _______,
@@ -830,6 +832,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return false;
 
   switch(keycode) {
+    case I3_CR:
+      if (record->event.pressed) {
+        register_code(KC_LGUI);
+        register_code(KC_LSHIFT);
+
+        register_code(KC_C);
+        unregister_code(KC_C);
+
+        register_code(KC_R);
+        unregister_code(KC_R);
+
+        unregister_code(KC_LSHIFT);
+        unregister_code(KC_LGUI);
+      }
+      return false;
+      break;
     case MY_SCRN:
       if (record->event.pressed) {
         screenshot();
