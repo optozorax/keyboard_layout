@@ -206,7 +206,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     CT_S,       KC_F,     KC_G,     KC_C,     KC_R,     KC_L,     KC_BSLS,
                 KC_D,     KC_H,     KC_T,     KC_N,     KC_S,     KC_MINS,
     CT_BSPC,    KC_B,     KC_M,     KC_W,     KC_V,     KC_Z,     KC_HASH,
-                          EN_CMSP,  KG_NEXT,  MY_SHAL,  MY_CTAL,  CTRL_C,
+                          EN_CMSP,  KG_NEXT,  MY_SHAL,  TG(6),    CTRL_C,
 
         MY_CTSH,  MY_ALT,   MY_WIN,
         MY_LANG,  KC_DOT,   KC_SPC),
@@ -330,7 +330,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     XXXXXXX,    KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_RBRC,
                 KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,
     XXXXXXX,    KC_N,     KC_M,     KC_COMM,  KC_DOT,   KC_SLSH,  KC_UNDS,
-                          KC_LEFT,  KC_UP,    KC_DOWN,  KC_RGHT,  XXXXXXX,
+                          KC_LEFT,  KC_UP,    KC_DOWN,  TG(6),    XXXXXXX,
 
         XXXXXXX,   XXXXXXX,   XXXXXXX,
         XXXXXXX,   XXXXXXX,   XXXXXXX),
