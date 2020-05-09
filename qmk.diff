@@ -1,0 +1,29 @@
+diff --git a/tmk_core/common/keyboard.c b/tmk_core/common/keyboard.c
+index a767d9c87..3d6b1a8d6 100644
+--- a/tmk_core/common/keyboard.c
++++ b/tmk_core/common/keyboard.c
+@@ -401,6 +401,12 @@ MATRIX_LOOP_END:
+         led_status = host_keyboard_leds();
+         keyboard_set_leds(led_status);
+     }
++
++    user_timer();
++}
++
++__attribute__((weak))
++void user_timer() {
+ }
+ 
+ /** \brief keyboard set leds
+diff --git a/tmk_core/common/keyboard.h b/tmk_core/common/keyboard.h
+index 98ceca49b..b705f1665 100644
+--- a/tmk_core/common/keyboard.h
++++ b/tmk_core/common/keyboard.h
+@@ -68,6 +68,7 @@ void keyboard_pre_init_kb(void);
+ void keyboard_pre_init_user(void);
+ void keyboard_post_init_kb(void);
+ void keyboard_post_init_user(void);
++void user_timer(void);
+ 
+ #ifdef __cplusplus
+ }
