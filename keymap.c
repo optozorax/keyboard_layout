@@ -196,7 +196,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,     KC_SCLN,  KC_LCBR,  KC_RCBR,  KC_P,     KC_Y,   CT_C,
     MO(4),      KC_A,     KC_O,     KC_E,     KC_U,     KC_I,
     MO(5),      KC_QUOT,  KC_Q,     KC_J,     KC_K,     KC_X,   CT_V,
-    MO(7),      TG(4),    TG(5),    KC_SLSH,  MO(7),
+    TG(4),      TG(5),    CT_SLSH,    KC_SLSH,  MO(7),
 
         CT_A,     KC_DEL,   MY_CTRL,
         SHF_1,    KC_BSPC,  KC_ENT,
@@ -349,8 +349,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     LGUI(S(KC_1)),    LGUI(S(KC_2)),  LGUI(S(KC_3)),  LGUI(S(KC_4)),  LGUI(S(KC_5)),  LGUI(S(KC_6)),  _______,
     LGUI(KC_F), LGUI(KC_R),  KC_LEFT,  KC_UP,  KC_DOWN,  KC_RIGHT,  LGUI(KC_SPACE),
-                LGUI(KC_D),  LGUI(S(KC_LEFT)),  LGUI(S(KC_UP)),    LGUI(S(KC_DOWN)),  LGUI(S(KC_RIGHT)),  _______,
-    I3_CR,    LGUI(KC_H),  LGUI(KC_V),  LGUI(KC_E),  LGUI(KC_W),  LGUI(KC_S),  _______,
+                LGUI(KC_D),  LGUI(S(KC_LEFT)),  LGUI(S(KC_UP)),    LGUI(S(KC_DOWN)),  LGUI(S(KC_RIGHT)),  LGUI(KC_G),
+    I3_CR,    LGUI(KC_H),  LGUI(KC_V),  LGUI(KC_E),  LGUI(KC_W),  LGUI(KC_S),  LGUI(KC_N),
                           _______,  _______,  _______,  _______,  _______,
 
         _______,  _______,  _______,
@@ -721,26 +721,30 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
 	//   = col 5, row 10
 	// м = col 2, row 2
 	// в = col 2, row 3
-	// bool returned = true;
-	// if (record->event.pressed) {
-	// 	if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
-	// 		if ((last.event.key.col == 2 && last.event.key.row == 8) ||
-	// 		   (last.event.key.col == 3 && last.event.key.row == 8) ||
-	// 		   (last.event.key.col == 5 && last.event.key.row == 10) ||
-	// 		   (last.event.key.col == 2 && last.event.key.row == 2) ||
-	//         (last.event.key.col == 2 && last.event.key.row == 3)) {
-	// 			if (timer_read() - last_key_time < 200) {
-	// 				returned = false;
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// if (record->event.pressed) {
-	// 	last_key_time = timer_read();
-	// 	last = *record;
-	// 	last_layer = biton32(layer_state);
-	// }
-	// return returned;
+  // bs = col 5, row 2
+	bool returned = true;
+	if (record->event.pressed) {
+		if (record->event.key.col == last.event.key.col && record->event.key.row == last.event.key.row && biton32(layer_state) == last_layer) {
+			if (
+         // (last.event.key.col == 2 && last.event.key.row == 8) ||
+         // (last.event.key.col == 3 && last.event.key.row == 8) ||
+         // (last.event.key.col == 5 && last.event.key.row == 10) ||
+         // (last.event.key.col == 2 && last.event.key.row == 2) ||
+         // (last.event.key.col == 2 && last.event.key.row == 3) || 
+         (last.event.key.col == 5 && last.event.key.row == 2)
+      ) {
+				if (timer_read() - last_key_time < 150) {
+					returned = false;
+				}
+			}
+		}
+	}
+	if (record->event.pressed) {
+		last_key_time = timer_read();
+		last = *record;
+		last_layer = biton32(layer_state);
+	}
+	return returned;
 	return true;
 }
 
