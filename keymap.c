@@ -730,7 +730,7 @@ bool process_double_letters(uint16_t keycode, keyrecord_t *record) {
          // (last.event.key.col == 3 && last.event.key.row == 8) ||
          // (last.event.key.col == 5 && last.event.key.row == 10) ||
          // (last.event.key.col == 2 && last.event.key.row == 2) ||
-         // (last.event.key.col == 2 && last.event.key.row == 3) || 
+         (last.event.key.col == 2 && last.event.key.row == 3) || 
          (last.event.key.col == 5 && last.event.key.row == 2)
       ) {
 				if (timer_read() - last_key_time < 150) {
