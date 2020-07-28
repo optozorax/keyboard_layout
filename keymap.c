@@ -156,8 +156,6 @@ enum custom_keycodes {
 
   KG_NEXT, // Klavogonki next race (Tab Tab Ctrl+Right)
 
-  MY_PLAY, // Stop music in browser for yandex-radio, rabota-specific
-
   LED_DN,
 
   LEFT_5, // 5 x left
@@ -280,7 +278,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     AU_MUTE,    LALT(S(KC_F9)),   KC_F8,   KC_F9,    LCTL(KC_B),   WN_D,     CT_C,
     _______,    AU_VOLU,  AU_NEXT,  CS_TAB,   CT_TAB,   AL_TAB,
     LED_DN,     AU_VOLD,  AU_PREV,  CT_1,     CT_2,     AL_TTAB,  CT_V,
-    RE_LANG,    _______,  _______,  WN_E,     MY_PLAY,  //AU_PLAY,
+    RE_LANG,    _______,  _______,  WN_E,     AU_PLAY,
 
         _______,  _______,  TASK,
         _______,  _______,  _______,
@@ -1026,28 +1024,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         one_shot_regime = true;
         shift_time = timer_read();
         oneShotLight = true;
-      }
-      return false;
-      } break;
-    case MY_PLAY: {
-      if (record->event.pressed) {
-        register_code(KC_LGUI);
-        register_code(KC_2);
-        unregister_code(KC_2);
-        unregister_code(KC_LGUI);
-
-        register_code(KC_LCTRL);
-        register_code(KC_2);
-        unregister_code(KC_2);
-        unregister_code(KC_LCTRL);
-
-        register_code(KC_ESC);
-        unregister_code(KC_ESC);
-
-        _delay_ms(100);
-        register_code(KC_SPC);
-        _delay_ms(50);
-        unregister_code(KC_SPC);
       }
       return false;
       } break;
